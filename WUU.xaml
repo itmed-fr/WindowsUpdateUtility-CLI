@@ -99,7 +99,7 @@
             <GroupBox Grid.ColumnSpan="8" Header="Controls">
                 <Grid>
                     <CheckBox x:Name='AutoRebootCheckBox' Content="Auto Reboot" Margin="71,0,846,0"/>
-                    <CheckBox x:Name="AutorunCheckBox" Content="Autorun Checks" HorizontalAlignment="Left" Margin="204,0,0,0" VerticalAlignment="Top"/>
+                    <CheckBox x:Name="AutorunCheckBox" Content="Autorun Checks" HorizontalAlignment="Left" Margin="204,0,0,0" VerticalAlignment="Top" IsChecked="True"/>
                 </Grid>
             </GroupBox>
             <GroupBox Header = "Computer List" Grid.Column = '0' Grid.Row = '2' Grid.ColumnSpan = '11' Grid.RowSpan = '3'>
