@@ -1,4 +1,5 @@
 PsExec.exe
 SCOMServer.txt
+CopyTestToServer.cmd
 CopyToServer.cmd
 CopyToTest.cmd
