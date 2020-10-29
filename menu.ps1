@@ -16,7 +16,7 @@ function Main_Menu{
     [1] Check de l'état des serveurs                     
     [2] Mettre à jour les serveurs                       
     [3] Vérifier si un serveur a besoin de redémarrer    
-    [4] Arrêt/Reboot serveurs                            
+    [4] menu ciblé                                       
     [5] Quitter                                          
 "@ -foregroundcolor white -backgroundcolor Black 
    Write-Host "                                                         " -foregroundcolor white -backgroundcolor Black 
