@@ -6,51 +6,53 @@ $ComputersList = [System.Collections.ArrayList]::new()
 
 # Main Menu Function
 function Main_Menu{  
-   Write-Host "---------------------------------------------------------"  
-   Write-Host "                                                         " -foregroundcolor black -backgroundcolor red  
-   Write-Host "                                                         " -foregroundcolor white -backgroundcolor Black
-   Write-Host "             Check State, Update, Reboot                 " -foregroundcolor white -backgroundcolor Black 
-   write-host @"
+	Write-Host "---------------------------------------------------------"  
+	Write-Host "                                                         " -foregroundcolor black -backgroundcolor red  
+	Write-Host "                                                         " -foregroundcolor white -backgroundcolor Black
+	Write-Host "             Check State, Update, Reboot                 " -foregroundcolor white -backgroundcolor Black 
+	Write-Host @"
                                                          
-    [0] Afficher la liste des serveurs                   
-    [1] Check de l'état des serveurs                     
+    [0] Recharger et afficher la liste des serveurs                   
+    [1] Vérification de l'état des serveurs              
     [2] Mettre à jour les serveurs                       
     [3] Vérifier si un serveur a besoin de redémarrer    
     [4] Arrêt/Reboot serveurs                            
-    [5] Quitter                                          
+    [5] Sélectionner un serveur                          
+    [6] Quitter                                          
 "@ -foregroundcolor white -backgroundcolor Black 
-   Write-Host "                                                         " -foregroundcolor white -backgroundcolor Black 
-   Write-Host "                                                         " -foregroundcolor black -backgroundcolor red   
-   Write-Host "---------------------------------------------------------"      
-    
-  $answer = read-host "Quelle action aimeriez-vous réaliser ?"
-  Write-Host " "  
-if ($answer -eq 0) {
-	ShowServerList
-	Main_Menu
-} elseif ($answer -eq 1) {
-    Server_Check_Status
-	Write-Host " "
-  Pause
-  Main_Menu
-} elseif ($answer -eq 2) {
-	UpdateServers
-	Write-Host " "
-	Pause
-	Main_Menu
-} elseif ($answer -eq 3) {
-      #nom fonction
-	Write-Host "3"
-  Pause
-  Main_Menu
-} elseif ($answer -eq 4) {
-      ok
-	Write-Host "4"
-  Main_Menu
-} elseif ($answer -eq 5) {
-	Write-Host "5"
+	Write-Host "                                                         " -foregroundcolor white -backgroundcolor Black 
+	Write-Host "                                                         " -foregroundcolor black -backgroundcolor red   
+	Write-Host "---------------------------------------------------------"      
 
-} 
+	$answer = read-host "Quelle action aimeriez-vous réaliser ?"
+	Write-Host " "  
+	if ($answer -eq 0) {
+		
+		ShowServerList
+		Main_Menu
+	} elseif ($answer -eq 1) {
+		ServerCheckStatus($ComputersList)
+		Write-Host " "
+	  Pause
+	  Main_Menu
+	} elseif ($answer -eq 2) {
+		UpdateServers
+		Write-Host " "
+		Pause
+		Main_Menu
+	} elseif ($answer -eq 3) {
+		  #nom fonction
+		Write-Host "3"
+	  Pause
+	  Main_Menu
+	} elseif ($answer -eq 4) {
+		  ok
+		Write-Host "4"
+	  Main_Menu
+	} elseif ($answer -eq 6) {
+		exit
+
+	} 
 }
 
 # Pause Function
@@ -66,18 +68,21 @@ function ShowServerList {
 }
 
 # Ping serveurs 
- function Server_Check_Status {
+ function ServerCheckStatus {
+	param (
+        [string[]]$ComputerNames
+    )
     Write-Host " "
     Write-Host "Vérification de l'état des serveurs..." -foregroundcolor white -backgroundcolor blue
     Write-Host "--------------------------------------"
-foreach($ComputerName in $ComputersList){
-		ping -n 3 $ComputerName >$null
+	foreach($ComputerName in $ComputerNames){
+		#ing -n 3 $ComputerName >$null
 		if($lastexitcode -eq 0) {
-			write-host "$ComputerName est UP" -foregroundcolor black -backgroundcolor green
-			Get-WUList -ComputerName $ComputerName
+			Write-Host "$ComputerName est UP. Vérification dix des dernières mises à jour..." -foregroundcolor black -backgroundcolor green
+			Get-WUHistory -ComputerName $ComputerName -Last 10
 		} 
         else {
-			write-host "$ComputerName est DOWN" -foregroundcolor black -backgroundcolor red
+			Write-Host "$ComputerName est DOWN" -foregroundcolor black -backgroundcolor red
 		}
 	}
 	Write-Host "---------------------------"
@@ -129,7 +134,7 @@ function AddComputersInList {
 
 
 function ReadFileAndAddComputer { #Add Computers from a file
-
+	
     $FilePath = "C:\scripts\computerlist.txt"
     If( Test-Path -Path $FilePath )
     {
