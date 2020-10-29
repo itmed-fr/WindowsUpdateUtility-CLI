@@ -50,9 +50,11 @@ if ($answer -eq 0) {
 #------------------------------------------------------------------------
 #------------------------------------------------------------------------
 function cible {
-	$ComputerNames
-	$server = read-host "Quel serveur voulez-vous cibler ?"
-	Menu_2($server)
+	for ($i = 0; $i -lt $ComputerNames.Length; $i++) {
+		Write-Host "[$i]" $ComputerNames[$i]
+	}
+	$serverid = Read-Host "Quel serveur voulez-vous cibler ?"
+	Menu_2($ComputerNames[$serverid])
 }
 #------------------------------------------------------------------------
 #------------------------------------------------------------------------
@@ -80,30 +82,30 @@ function Menu_2{
     
 	$answer = read-host "Quelle action aimeriez-vous réaliser ?"
 	Write-Host " "  
-if ($answer -eq 0) {
-	Server_Check_Status
-	Menu_2($server)
-} elseif ($answer -eq 1) {
-    #fonction
-	Write-Host " "
-	Pause
-	Menu_2($server)
-} elseif ($answer -eq 2) {
-	UpdateServers
-	Write-Host " "
-	Pause
-	Menu_2($server)
-} elseif ($answer -eq 3) {
-    #nom fonction
-	Write-Host "3"
-	Pause
-	Menu_2($server)
-} elseif ($answer -eq 4) {
-	Write-Host " "
-	Main_Menu
-} elseif ($answer -eq 5) {
-	Exit
-} 
+	if ($answer -eq 0) {
+		Server_Check_Status
+		Menu_2($server)
+	} elseif ($answer -eq 1) {
+		#fonction
+		Write-Host " "
+		Pause
+		Menu_2($server)
+	} elseif ($answer -eq 2) {
+		UpdateServers
+		Write-Host " "
+		Pause
+		Menu_2($server)
+	} elseif ($answer -eq 3) {
+		#nom fonction
+		Write-Host "3"
+		Pause
+		Menu_2($server)
+	} elseif ($answer -eq 4) {
+		Write-Host " "
+		Main_Menu
+	} elseif ($answer -eq 5) {
+		Exit
+	} 
 }
 
 
