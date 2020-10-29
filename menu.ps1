@@ -1,8 +1,7 @@
 ﻿#Ce programme permet de afficher, verifier l'état, mettre à jour, vérifier le besoin de redémarrer une liste de serveur.
 #Veuillez changer le chemin de $hosts vers la liste de serveurs.
 
-$hosts	= "C:\past\hosts.txt"
-$servers	= get-content "$hosts"
+$ComputersList = [System.Collections.ArrayList]::new()
 
 
 # Main Menu Function
@@ -27,20 +26,18 @@ function Main_Menu{
   $answer = read-host "Quelle action aimeriez-vous réaliser ?"
   Write-Host " "  
 if ($answer -eq 0) {
-	Write-Host "Serveurs présents dans le fichier hosts.txt :   " -foregroundcolor black -backgroundcolor yellow
-	Write-Host " "
-    $servers
-  Main_Menu
+	ShowServerList
+	Main_Menu
 } elseif ($answer -eq 1) {
     Server_Check_Status
 	Write-Host " "
   Pause
   Main_Menu
 } elseif ($answer -eq 2) {
-      #nom fonction
-	Write-Host "2"
-  Pause
-  Main_Menu
+	UpdateServers
+	Write-Host " "
+	Pause
+	Main_Menu
 } elseif ($answer -eq 3) {
       #nom fonction
 	Write-Host "3"
@@ -64,39 +61,84 @@ function Pause {
     Write-Host ""
 }
 
+function ShowServerList {
+	Write-Host $ComputersList
+}
+
 # Ping serveurs 
  function Server_Check_Status {
     Write-Host " "
-    write-host "Vérification de l'état des serveurs..." -foregroundcolor white -backgroundcolor blue
+    Write-Host "Vérification de l'état des serveurs..." -foregroundcolor white -backgroundcolor blue
     Write-Host "--------------------------------------"
-foreach($server in $servers){
-		ping -n 3 $server >$null
+foreach($ComputerName in $ComputersList){
+		ping -n 3 $ComputerName >$null
 		if($lastexitcode -eq 0) {
-			write-host "$server est UP" -foregroundcolor black -backgroundcolor green
+			write-host "$ComputerName est UP" -foregroundcolor black -backgroundcolor green
+			Get-WUList -ComputerName $ComputerName
 		} 
         else {
-			write-host "$server est DOWN" -foregroundcolor black -backgroundcolor red
+			write-host "$ComputerName est DOWN" -foregroundcolor black -backgroundcolor red
 		}
 	}
 	Write-Host "---------------------------"
 }
 
-function ok {
+function UpdateWUOnServers {
+	param (
+        [string[]]$ComputerNames
+    )
+	
+	Write-Host "Mise à jour du module PSWindowsUpdate sur les serveurs cibles..." -foregroundcolor white -backgroundcolor blue
+    Write-Host "----------------------------------------------------------------"
+	Update-WUModule -LocalPSWUSource "C:\Program Files\WindowsPowerShell\Modules\PSWindowsUpdate" -ComputerName $ComputerNames
+	Write-Host "----------------------------------------------------------------"
+}
+
+function UpdateServers {
     Write-Host " "
-    write-host "Vérification des dernieres sauvegardes..." -foregroundcolor white -backgroundcolor blue
-    Write-Host "--------------------------------------"
-foreach($server in $servers){
-		$u = ping -n 3 $server >$null
-		if($lastexitcode -eq 0) {
-			write-host "$u" -foregroundcolor black -backgroundcolor green
-		} 
-        else {
-			write-host "$server error" -foregroundcolor black -backgroundcolor red
-		}
+    Write-Host "Lancement des mises à jour..." -foregroundcolor white -backgroundcolor blue
+    Write-Host "-----------------------------"
+	foreach($ComputerName in $ComputersList){
+		Install-WindowsUpdate -ComputerName $ComputerName -AcceptAll
+		CheckRebootStatus ($ComputerName)
 	}
 	Write-Host "---------------------------"
+}
+
+function CheckRebootStatus {
+	Get-WURebootStatus -ComputerName
+}
+
+
+#Add new Computer(s) to list
+function AddComputersInList {
+	param (
+        [string[]]$ComputerNames
+    )
+    Write-Verbose "Adding $ComputerName."
+
+    #Add to list
+    foreach ($ComputerName in $ComputerNames) {
+        $ComputerName = $ComputerName.Trim() #Remove any whitspace
+        if ([System.String]::IsNullOrEmpty($ComputerName)) {continue} #Do not add if name empty
+
+        $ComputersList.Add($ComputerName)
+		Write-Verbose "$ComputerName added."
+    }
+}
+
+
+function ReadFileAndAddComputer { #Add Computers from a file
+
+    $FilePath = "C:\scripts\computerlist.txt"
+    If( Test-Path -Path $FilePath )
+    {
+        $entries = (Get-Content $FilePath | Where {$_ -ne ''}) #Parse
+        AddComputersInList ($entries)
+    }
 }
 
 cls
+ReadFileAndAddComputer
 Main_menu
     
