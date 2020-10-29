@@ -8,9 +8,10 @@ $AddEntry = {
     foreach ($Computer in $ComputerName) {
         $Computer = $Computer.Trim() #Remove any whitspace
         if ([System.String]::IsNullOrEmpty($Computer)) {continue} #Do not add if name empty
-        if (($ComputersList.Listview.Items | Select-Object -Expand Computer) -contains $Computer) {continue} #Do not add duplicate
+        #if (($ComputersList.Listview.Items | Select-Object -Expand Computer) -contains $Computer) {continue} #Do not add duplicate
 
         $ComputersList.Add($Computer)
+		Write-Verbose "$ComputerName added."
     }
 }
 
@@ -27,9 +28,11 @@ $ReadFileAndAddComputer = { #Add Computers from a file
 
 $DownloadUpdates = {
     Param ($Computer)
+	Write-Verbose "$Computer downloading updates."
     Try {
         #Set path for psexec, scripts
         Set-Location $Path
+		Write-Host "Dans le try"
 
         #Copy script to remote Computer and execute
         if ( ! ( Test-Path -Path "\\$($Computer.Computer)\C$\Admin\Scripts") ) {
@@ -37,6 +40,7 @@ $DownloadUpdates = {
         }
         Copy-Item '.\Scripts\UpdateDownloader.ps1' "\\$($Computer.Computer)\c$\Admin\Scripts" -Force
         [int]$DownloadCount = .\PsExec.exe -accepteula -nobanner -s "\\$($Computer.Computer)" cmd.exe /c 'echo . | powershell.exe -ExecutionPolicy Bypass -file C:\Admin\Scripts\UpdateDownloader.ps1'
+		Write-Verbose $DownloadCount
         Remove-Item "\\$($Computer.Computer)\c$\Admin\Scripts\UpdateDownloader.ps1"
         if ($LASTEXITCODE -ne 0) {
             throw "PsExec failed with error code $LASTEXITCODE"
@@ -44,6 +48,7 @@ $DownloadUpdates = {
     }
     catch {
         #Cancel any remaining actions
+		Write-Verbose "exit"
         exit
     }
 }
@@ -81,6 +86,6 @@ $InstallUpdates = {
 
 &$ReadFileAndAddComputer
 
-$ComputersList.ForEach($Computer) {
+ForEach($Computer in $ComputersList) {
 Write-Host $Computer
 }
