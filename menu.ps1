@@ -1,7 +1,7 @@
 ﻿#Ce programme permet de afficher, verifier l'état, mettre à jour, vérifier le besoin de redémarrer une liste de serveur.
 #Veuillez changer le chemin de $hosts vers la liste de serveurs.
 
-$ComputersList = [System.Collections.ArrayList]::new()
+ 
 
 
 # Main Menu Function
@@ -24,34 +24,96 @@ function Main_Menu{
 	Write-Host "                                                         " -foregroundcolor black -backgroundcolor red   
 	Write-Host "---------------------------------------------------------"      
 
-	$answer = read-host "Quelle action aimeriez-vous réaliser ?"
+	$choix = read-host "Quelle action aimeriez-vous réaliser ?"
 	Write-Host " "  
-	if ($answer -eq 0) {
+	if ($choix -eq 0) {
 		
 		ShowServerList
 		Main_Menu
-	} elseif ($answer -eq 1) {
+	} elseif ($choix -eq 1) {
 		ServerCheckStatus($ComputersList)
 		Write-Host " "
 	  Pause
 	  Main_Menu
-	} elseif ($answer -eq 2) {
+	} elseif ($choix -eq 2) {
 		UpdateServers
 		Write-Host " "
 		Pause
 		Main_Menu
-	} elseif ($answer -eq 3) {
+	} elseif ($choix -eq 3) {
 		  #nom fonction
 		Write-Host "3"
 	  Pause
 	  Main_Menu
-	} elseif ($answer -eq 4) {
+	} elseif ($choix -eq 4) {
 		  ok
 		Write-Host "4"
 	  Main_Menu
-	} elseif ($answer -eq 6) {
+	} elseif ($choix -eq 5) {
+		Write-Host " "
+		SelectServer
+	} elseif ($choix -eq 6) {
 		exit
 
+	} 
+}
+
+function SelectServer {
+	for ($i = 0; $i -lt $ComputersList.Count; $i++) {
+		Write-Host "[$i]" $ComputersList[$i]
+	}
+	$serverid = Read-Host "Quel serveur voulez-vous cibler ?"
+	Menu_2($ComputersList[$serverid])
+}
+#------------------------------------------------------------------------
+#------------------------------------------------------------------------
+#------------------------------------------------------------------------
+
+function Menu_2{
+	param(
+		[String]$server
+		)
+   Write-Host "---------------------------------------------------------"  
+   Write-Host "                    Check $server                        " -foregroundcolor Yellow 
+   Write-Host "                                                         " -foregroundcolor DarkGray -backgroundcolor red  
+   write-host @"
+                                                         
+    [0] Check de l'état du serveur                       
+    [1] Vérifier les mises à jour                        
+    [2] Mettre à jour le serveur                         
+    [3] Vérifier si le serveur a besoin de redémarrer    
+    [4] Revenir au menu principal                        
+    [5] Quitter                                          
+"@ -foregroundcolor white -backgroundcolor DarkGray 
+	Write-Host "                                                         " -foregroundcolor white -backgroundcolor DarkGray 
+	Write-Host "                                                         " -foregroundcolor DarkGray -backgroundcolor red   
+	Write-Host "---------------------------------------------------------"      
+    
+	$choix = read-host "Quelle action aimeriez-vous réaliser ?"
+	Write-Host " "  
+	if ($choix -eq 0) {
+		ServerCheckStatus($server)
+		Menu_2($server)
+	} elseif ($choix -eq 1) {
+		#fonction
+		Write-Host " "
+		Pause
+		Menu_2($server)
+	} elseif ($choix -eq 2) {
+		UpdateServers
+		Write-Host " "
+		Pause
+		Menu_2($server)
+	} elseif ($choix -eq 3) {
+		CheckRebootStatus($server)
+		Write-Host " "
+		Pause
+		Menu_2($server)
+	} elseif ($choix -eq 4) {
+		Write-Host " "
+		Main_Menu
+	} elseif ($choix -eq 5) {
+		Exit
 	} 
 }
 
@@ -76,7 +138,7 @@ function ShowServerList {
     Write-Host "Vérification de l'état des serveurs..." -foregroundcolor white -backgroundcolor blue
     Write-Host "--------------------------------------"
 	foreach($ComputerName in $ComputerNames){
-		#ing -n 3 $ComputerName >$null
+		ping -n 3 $ComputerName >$null
 		if($lastexitcode -eq 0) {
 			Write-Host "$ComputerName est UP. Vérification dix des dernières mises à jour..." -foregroundcolor black -backgroundcolor green
 			Get-WUHistory -ComputerName $ComputerName -Last 10
@@ -111,9 +173,23 @@ function UpdateServers {
 }
 
 function CheckRebootStatus {
-	Get-WURebootStatus -ComputerName
+	param (
+        [string[]]$ComputerNames
+    )
+	Write-Host " "
+    Write-Host "Vérification de l'état des serveurs..." -foregroundcolor white -backgroundcolor blue
+    Write-Host "--------------------------------------"
+	foreach($ComputerName in $ComputerNames){
+			$RebootRequired = Get-WURebootStatus -ComputerName $ComputerName -Silent
+			if ($RebootRequired)
+			{
+				$choix = Read-Host  "Le serveur a besoin d'être redémarré. Voulez-vous le redémarrer tout de suite O/N ?"
+				if ($choix -eq 'O') {Reboot-Computer $ComputerName}
+			}
+	}
+	Write-Host "---------------------------"
 }
-
+	
 
 #Add new Computer(s) to list
 function AddComputersInList {
@@ -132,9 +208,8 @@ function AddComputersInList {
     }
 }
 
-
 function ReadFileAndAddComputer { #Add Computers from a file
-	
+	$ComputersList.Clear()
     $FilePath = "C:\scripts\computerlist.txt"
     If( Test-Path -Path $FilePath )
     {
