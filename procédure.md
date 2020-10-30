@@ -7,8 +7,13 @@
 	
 	
 Faire un deuxième menu orienté sur un serveur particulier
-0. Mettre à jour le module PSWindowsUpdate 
-1. Télécharger les mises à jour
-2. Télécharger et installer les mises à jour
-3. Télécharger, installer les mises à jour et rédémarrer
-4. Retour au menu principal
+0. Afficher la liste des serveurs 
+1. Mettre à jour les serveurs
+2. menu ciblé
+3. Quitter
+
+
+1 - Afficher les dernieres mises à jour 
+  - vérifier si le serveur a besoin de redemarrer
+  - Vérifier l'état du serveurs:
+	- Ping + service Workstation UP

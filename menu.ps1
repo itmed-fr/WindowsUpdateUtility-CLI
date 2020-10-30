@@ -12,13 +12,10 @@ function Main_Menu{
 	Write-Host "             Check State, Update, Reboot                 " -foregroundcolor white -backgroundcolor Black 
 	Write-Host @"
                                                          
-    [0] Recharger et afficher la liste des serveurs                   
-    [1] Vérification de l'état des serveurs              
-    [2] Mettre à jour les serveurs                       
-    [3] Vérifier si un serveur a besoin de redémarrer    
-    [4] Arrêt/Reboot serveurs                            
-    [5] Sélectionner un serveur                          
-    [6] Quitter                                          
+    [0] Recharger et afficher la liste des serveurs      
+    [1] Check des serveurs                               
+    [2] Sélectionner un serveur                          
+    [3] Quitter                                          
 "@ -foregroundcolor white -backgroundcolor Black 
 	Write-Host "                                                         " -foregroundcolor white -backgroundcolor Black 
 	Write-Host "                                                         " -foregroundcolor black -backgroundcolor red   
@@ -27,34 +24,20 @@ function Main_Menu{
 	$choix = read-host "Quelle action aimeriez-vous réaliser ?"
 	Write-Host " "  
 	if ($choix -eq 0) {
-		
 		ShowServerList
 		Main_Menu
 	} elseif ($choix -eq 1) {
-		ServerCheckStatus($ComputersList)
-		Write-Host " "
-	  Pause
-	  Main_Menu
-	} elseif ($choix -eq 2) {
 		UpdateServers
+		ServerCheckStatus($ComputersList)
 		Write-Host " "
 		Pause
 		Main_Menu
-	} elseif ($choix -eq 3) {
-		  #nom fonction
-		Write-Host "3"
-	  Pause
-	  Main_Menu
-	} elseif ($choix -eq 4) {
-		  ok
-		Write-Host "4"
-	  Main_Menu
-	} elseif ($choix -eq 5) {
+	} elseif ($choix -eq 2) {
 		Write-Host " "
 		SelectServer
-	} elseif ($choix -eq 6) {
+	} elseif ($choix -eq 3) {
+		Write-Host "Good Bye"
 		exit
-
 	} 
 }
 
@@ -122,7 +105,7 @@ function Pause {
     Write-Host " "
     Write-Host "Appuyer sur n'importe quelle touche pour continuer..." -foregroundcolor gray -backgroundcolor blue
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-    Write-Host ""
+    Write-Host " "
 }
 
 function ShowServerList {
