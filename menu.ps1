@@ -137,7 +137,7 @@ function ShowServerList {
 			get-service Workstation -ComputerName $ComputerName
 			if($? -eq "True") {
 				Write-Host " $ComputerName est UP " -foregroundcolor black -backgroundcolor green
-				Write-Host "|"
+				Write-Host "|" -NoNewline
 				Write-Host " Workstation est en marche... " -foregroundcolor black -backgroundcolor green
 			}
 			else {
