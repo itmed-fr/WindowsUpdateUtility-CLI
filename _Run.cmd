@@ -47,5 +47,5 @@ if '%1'=='ELEV' (del "%vbsGetPrivileges%" 1>nul 2>nul  &  shift /1)
 ::::::::::::::::::::::::::::
 
 CD /D "%~dp0"
-start powershell.exe -windowstyle hidden -executionpolicy bypass -STA -Nologo -File WUU.ps1
+start powershell.exe -windowstyle hidden -executionpolicy bypass -STA -Nologo -File WUU-CLI.ps1
 REM ping -n 300 127.0.0.1 > nul
