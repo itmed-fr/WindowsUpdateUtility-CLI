@@ -89,7 +89,8 @@ function Menu_2{
 		CheckServerStatus($server)
 		Menu_2($server)
 	} elseif ($choix -eq 1) {
-		#fonction
+		MAJList($server)
+		CheckRebootStatus($server)
 		Write-Host " "
 		Pause
 		Menu_2($server)
