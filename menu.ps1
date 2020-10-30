@@ -31,7 +31,7 @@ function Main_Menu{
 		ShowServerList
 		Main_Menu
 	} elseif ($choix -eq 1) {
-		VerifyUpdatesAndCheckRebootStatus($ComputersList)
+		VerifyUpdatesAndCheckStatusAndReboot($ComputersList)
 		Write-Host " "
 		Pause
 		Main_Menu
@@ -88,7 +88,7 @@ function Menu_2{
 		CheckServerStatus($server)
 		Menu_2($server)
 	} elseif ($choix -eq 1) {
-		VerifyUpdatesAndCheckRebootStatus($server)
+		VerifyUpdatesAndCheckStatusAndReboot($server)
 		Write-Host " "
 		Pause
 		Menu_2($server)
@@ -122,7 +122,7 @@ function ShowServerList {
 }
 
 
-function VerifyUpdatesAndCheckRebootStatus {
+function VerifyUpdatesAndCheckStatusAndReboot {
 	param (
         [string[]]$ComputerNames
     )
@@ -130,18 +130,80 @@ function VerifyUpdatesAndCheckRebootStatus {
 		Write-Host "Serveur $ComputerName " -foregroundcolor yellow -backgroundcolor blue
 		MAJList($ComputerName)
 		CheckRebootStatus($ComputerName)
+		CheckServerReboot($ComputerName)
+		# if (CheckRebootStatus($ComputerName))		
+		# {
+			# CheckServerReboot($ComputerName)
+		# }
 	}	
 }
 
 # Ping serveurs et vérification du service Lanmanserver
- function CheckServerStatus {
+function CheckServerReboot {
 	param (
         [string[]]$ComputerNames
     )
     Write-Host " "
-    Write-Host "Vérification de l'état des serveurs..." -foregroundcolor white -backgroundcolor blue
+	if ($ComputerNames.Count -gt 1)
+    {
+		Write-Host "Vérification de l'état des serveurs..." -foregroundcolor white -backgroundcolor blue
+	}
+	else
+	{
+		Write-Host "Vérification de l'état du serveur..." -foregroundcolor white -backgroundcolor blue
+	}
     Write-Host "--------------------------------------"
 	foreach($ComputerName in $ComputerNames){
+	
+		#On ping tant que le système répond
+		Write-Host "Le système est en cours de redémarrage..."  -NoNewline
+		do{
+			ping -n 3 $ComputerName > $null
+			Write-Host "." -NoNewline
+		}
+		while ($lastexitcode -eq 0)
+		
+		Write-Host " "
+		
+		#On ping jusqu'à ce que le système réponde
+		Write-Host "Le système est en cours de démarrage..."  -NoNewline
+		do{
+			ping -n 3 $ComputerName > $null
+			Write-Host "." -NoNewline
+		}
+		while ($lastexitcode -eq 1)
+		
+		Write-Host " "
+		
+		Write-Host "Le système est démarré, attente du démarrage du service $ServiceToTest" -NoNewline
+		do{
+			Write-Host "." -NoNewline
+		}
+		while ((Get-Service $ServiceToTest -ComputerName $ComputerName).Status -ne "Running")
+		Write-Host " "
+		Write-Host "Le service $ServiceToTest est démarré. Le système est opérationnel"
+		
+	}
+	Write-Host "---------------------------"
+}
+
+<# # Ping serveurs et vérification du service Lanmanserver
+function CheckServerStatus {
+	param (
+        [string[]]$ComputerNames
+    )
+    Write-Host " "
+	if ($ComputerNames.Count -gt 1)
+    {
+		Write-Host "Vérification de l'état des serveurs..." -foregroundcolor white -backgroundcolor blue
+	}
+	else
+	{
+		Write-Host "Vérification de l'état du serveur..." -foregroundcolor white -backgroundcolor blue
+	}
+    Write-Host "--------------------------------------"
+	foreach($ComputerName in $ComputerNames){
+	
 		ping -n 3 $ComputerName > $null
 		if($lastexitcode -eq 0) {
 			if( ( Get-Service Lanmanserver -ComputerName SRV-AD02 ).Status -eq "Running" ) {
@@ -160,7 +222,7 @@ function VerifyUpdatesAndCheckRebootStatus {
 		}
 	}
 	Write-Host "---------------------------"
-}
+} #>
 
 function UpdateWUOnServers {
 	param (
@@ -215,6 +277,7 @@ function CheckRebootStatus {
 	#}
 	Write-Host "----------------------------------------"
 	Write-Host " "
+	return $RebootRequired
 }
 
 function MAJList {
