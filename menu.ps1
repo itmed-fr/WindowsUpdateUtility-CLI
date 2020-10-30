@@ -4,7 +4,7 @@
 $Date = Get-Date -Format "dd-MM-yyyy"
 $LogPath = "C:\Scripts\"+$Date+"_CheckServerLog.txt"
 
-
+$ComputersList = [System.Collections.ArrayList]::new()
 
 
 # Main Menu Function
@@ -31,8 +31,7 @@ function Main_Menu{
 		ShowServerList
 		Main_Menu
 	} elseif ($choix -eq 1) {
-		MAJList($ComputersList)
-		CheckRebootStatus($ComputersList)
+		VerifyUpdatesAndCheckRebootStatus($ComputersList)
 		Write-Host " "
 		Pause
 		Main_Menu
@@ -89,8 +88,7 @@ function Menu_2{
 		CheckServerStatus($server)
 		Menu_2($server)
 	} elseif ($choix -eq 1) {
-		MAJList($server)
-		CheckRebootStatus($server)
+		VerifyUpdatesAndCheckRebootStatus($server)
 		Write-Host " "
 		Pause
 		Menu_2($server)
@@ -123,7 +121,19 @@ function ShowServerList {
 	Write-Host $ComputersList
 }
 
-# Ping serveurs et vérification du service Workstation
+
+function VerifyUpdatesAndCheckRebootStatus {
+	param (
+        [string[]]$ComputerNames
+    )
+	foreach($ComputerName in $ComputerNames){
+		Write-Host "Serveur $ComputerName " -foregroundcolor yellow -backgroundcolor blue
+		MAJList($ComputerName)
+		CheckRebootStatus($ComputerName)
+	}	
+}
+
+# Ping serveurs et vérification du service Lanmanserver
  function CheckServerStatus {
 	param (
         [string[]]$ComputerNames
@@ -132,18 +142,17 @@ function ShowServerList {
     Write-Host "Vérification de l'état des serveurs..." -foregroundcolor white -backgroundcolor blue
     Write-Host "--------------------------------------"
 	foreach($ComputerName in $ComputerNames){
-		ping -n 3 $ComputerName >$null
+		ping -n 3 $ComputerName > $null
 		if($lastexitcode -eq 0) {
-			get-service Workstation -ComputerName $ComputerName
-			if($? -eq "True") {
-				Write-Host " $ComputerName est UP " -foregroundcolor black -backgroundcolor green
+			if( ( Get-Service Lanmanserver -ComputerName SRV-AD02 ).Status -eq "Running" ) {
+				Write-Host " $ComputerName est UP " -foregroundcolor black -backgroundcolor green -NoNewline
 				Write-Host "|" -NoNewline
-				Write-Host " Workstation est en marche... " -foregroundcolor black -backgroundcolor green
+				Write-Host " Lanmanserver est en marche... " -foregroundcolor black -backgroundcolor green
 			}
 			else {
 				Write-Host " $ComputerName est UP " -foregroundcolor black -backgroundcolor green -NoNewline
 				Write-Host "|" -NoNewline
-				Write-Host " Workstation ne marche pas... " -foregroundcolor black -backgroundcolor red
+				Write-Host " Lanmanserver ne marche pas... " -foregroundcolor black -backgroundcolor red
 			}
 		} 
         else {
@@ -181,29 +190,53 @@ function CheckRebootStatus {
         [string[]]$ComputerName
     )
 	Write-Host " "
-    Write-Host "Vérification de l'état des serveurs..." -foregroundcolor white -backgroundcolor blue
-    Write-Host "--------------------------------------"
+    Write-Host "Vérification de l'état de redémarrage..." -foregroundcolor white -backgroundcolor blue
+    Write-Host "----------------------------------------"
 	#foreach($ComputerName in $ComputerNames){
 			$RebootRequired = Get-WURebootStatus -ComputerName $ComputerName -Silent
 			if ($RebootRequired)
 			{
-				$choix = Read-Host  "$ComputerName a besoin d'être redémarré. Voulez-vous le redémarrer tout de suite O/N ?"
-				if ($choix -eq 'O') {Reboot-Computer $ComputerName}
+				#$choix = (Read-Host  "$ComputerName a besoin d'être redémarré. Voulez-vous le redémarrer tout de suite O/N ?").ToLower()
+				do {
+					try {
+						$choixOK = $true
+						$choix = Read-Host  "$ComputerName a besoin d'être redémarré. Voulez-vous le redémarrer tout de suite O/N ?"
+						Write-Verbose "Choix $choix"
+						} # end try
+					catch {$choixOK = $false}
+				} # end do 
+				until (($choix -eq 'n' -or $choix -eq 'o') -and $choixOK)
+				if ($choix -eq 'o') {Restart-Computer $ComputerName -Force}
+			}
+			else
+			{
+			Write-Host "Pas de redémarrage requis"
 			}
 	#}
-	Write-Host "---------------------------"
+	Write-Host "----------------------------------------"
+	Write-Host " "
 }
 
 function MAJList {
 	param (
         [string[]]$ComputerNames
     )
-	$NumberMAJ = read-host "Combien voulez-voir de mises à jour (veuillez entrer un chiffre) ?"
+	#$NumberMAJ = read-host "Combien voulez-voir de mises à jour (veuillez entrer un chiffre) ?"
+	$NumberMAJ = 10
+	do {
+		try {
+			$numOk = $true
+			[uint16]$NumberMAJ = Read-host "Combien voulez-voir de mises à jour (1 à 25) ?"
+			} # end try
+		catch {$numOK = $false}
+    } # end do 
+	until (($NumberMAJ -ge 1 -and $NumberMAJ -le 25) -and $numOK)
+	
 	
 	foreach($ComputerName in $ComputerNames){
 		Write-Host "Affichage des $NumberMAJ dernières mises à jour de $ComputerName " -foregroundcolor white -backgroundcolor blue
 		Get-WUHistory -ComputerName $ComputerName -Last $NumberMAJ
-		Write-Host "---------------------------------------------------------" -foregroundcolor white -backgroundcolor blue
+		#Write-Host "---------------------------------------------------------" -foregroundcolor white -backgroundcolor blue
 	}
 }
 	
@@ -213,7 +246,7 @@ function AddComputersInList {
 	param (
         [string[]]$ComputerNames
     )
-    Write-Verbose "Adding $ComputerName."
+    Write-Verbose "Adding $ComputerNames."
 
     #Add to list
     foreach ($ComputerName in $ComputerNames) {
